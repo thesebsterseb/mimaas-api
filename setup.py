@@ -43,6 +43,10 @@ setup(
         "pyyaml>=5.4.0",
     ],
     extras_require={
+        "viz": [
+            "pandas>=1.3.0",
+            "plotly>=5.0.0",
+        ],
         "dev": [
             "pytest>=7.0.0",
             "pytest-cov>=3.0.0",

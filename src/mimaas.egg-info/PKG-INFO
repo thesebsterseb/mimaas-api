@@ -22,6 +22,9 @@ Requires-Python: >=3.8
 Description-Content-Type: text/markdown
 Requires-Dist: requests>=2.25.0
 Requires-Dist: pyyaml>=5.4.0
+Provides-Extra: viz
+Requires-Dist: pandas>=1.3.0; extra == "viz"
+Requires-Dist: plotly>=5.0.0; extra == "viz"
 Provides-Extra: dev
 Requires-Dist: pytest>=7.0.0; extra == "dev"
 Requires-Dist: pytest-cov>=3.0.0; extra == "dev"

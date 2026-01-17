@@ -6,6 +6,7 @@ src/mimaas/client.py
 src/mimaas/config.py
 src/mimaas/exceptions.py
 src/mimaas/models.py
+src/mimaas/viz.py
 src/mimaas.egg-info/PKG-INFO
 src/mimaas.egg-info/SOURCES.txt
 src/mimaas.egg-info/dependency_links.txt

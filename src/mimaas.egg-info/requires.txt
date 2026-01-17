@@ -7,3 +7,7 @@ pytest-cov>=3.0.0
 black>=22.0.0
 flake8>=4.0.0
 mypy>=0.950
+
+[viz]
+pandas>=1.3.0
+plotly>=5.0.0

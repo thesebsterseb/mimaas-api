@@ -495,13 +495,13 @@ class MIMaaSClient:
             output_path: Where to save the file
             use_server_folder: If True, prepend the server folder name to the output path
         """
-        # If use_server_folder, prepend the server folder name to the path
+        # If use_server_folder, create downloads/<folder_name>/ structure
         if use_server_folder:
             request = self.get_request(request_id)
             if request.folder_name:
                 output_dir = Path(output_path).parent
                 output_filename = Path(output_path).name
-                output_path = str(output_dir / request.folder_name / output_filename)
+                output_path = str(output_dir / "downloads" / request.folder_name / output_filename)
 
         response = self._make_request(
             'GET',
