@@ -142,6 +142,7 @@ class Request:
     board: str
     quantize: bool
     network_path: Optional[str]
+    folder_name: Optional[str]
     error_message: Optional[str]
     results: Optional[Results] = None
 
@@ -186,6 +187,7 @@ class Request:
             board=data['board'],
             quantize=data.get('quantize', False),
             network_path=data.get('network'),
+            folder_name=data.get('folder_name'),
             error_message=data.get('error_message'),
             results=results
         )

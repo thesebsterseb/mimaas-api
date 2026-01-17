@@ -455,35 +455,36 @@ class MIMaaSClient:
 
     # Artifact Download Methods
 
-    def download_ram_report(self, request_id: int, output_path: str) -> None:
+    def download_ram_report(self, request_id: int, output_path: str, use_server_folder: bool = False) -> None:
         """Download detailed RAM usage report (ram.json)"""
-        self._download_artifact(request_id, 'ram_report', output_path)
+        self._download_artifact(request_id, 'ram_report', output_path, use_server_folder)
 
-    def download_rom_report(self, request_id: int, output_path: str) -> None:
+    def download_rom_report(self, request_id: int, output_path: str, use_server_folder: bool = False) -> None:
         """Download detailed ROM usage report (rom.json)"""
-        self._download_artifact(request_id, 'rom_report', output_path)
+        self._download_artifact(request_id, 'rom_report', output_path, use_server_folder)
 
-    def download_power_summary(self, request_id: int, output_path: str) -> None:
+    def download_power_summary(self, request_id: int, output_path: str, use_server_folder: bool = False) -> None:
         """Download power measurement summary (ppk2_summary.csv)"""
-        self._download_artifact(request_id, 'power_summary', output_path)
+        self._download_artifact(request_id, 'power_summary', output_path, use_server_folder)
 
-    def download_power_samples(self, request_id: int, output_path: str) -> None:
+    def download_power_samples(self, request_id: int, output_path: str, use_server_folder: bool = False) -> None:
         """Download raw power samples (ppk2_samples.csv - may be large)"""
-        self._download_artifact(request_id, 'power_samples', output_path)
+        self._download_artifact(request_id, 'power_samples', output_path, use_server_folder)
 
-    def download_model(self, request_id: int, output_path: str) -> None:
+    def download_model(self, request_id: int, output_path: str, use_server_folder: bool = False) -> None:
         """Download original TFLite model"""
-        self._download_artifact(request_id, 'model', output_path)
+        self._download_artifact(request_id, 'model', output_path, use_server_folder)
 
-    def download_all_artifacts(self, request_id: int, output_path: str) -> None:
+    def download_all_artifacts(self, request_id: int, output_path: str, use_server_folder: bool = False) -> None:
         """Download all artifacts as zip file"""
-        self._download_artifact(request_id, 'all', output_path)
+        self._download_artifact(request_id, 'all', output_path, use_server_folder)
 
     def _download_artifact(
         self,
         request_id: int,
         artifact_type: str,
-        output_path: str
+        output_path: str,
+        use_server_folder: bool = False
     ) -> None:
         """
         Download specific artifact.
@@ -492,7 +493,16 @@ class MIMaaSClient:
             request_id: Request ID
             artifact_type: Type of artifact
             output_path: Where to save the file
+            use_server_folder: If True, prepend the server folder name to the output path
         """
+        # If use_server_folder, prepend the server folder name to the path
+        if use_server_folder:
+            request = self.get_request(request_id)
+            if request.folder_name:
+                output_dir = Path(output_path).parent
+                output_filename = Path(output_path).name
+                output_path = str(output_dir / request.folder_name / output_filename)
+
         response = self._make_request(
             'GET',
             f'/api/requests/{request_id}/artifacts/{artifact_type}',
