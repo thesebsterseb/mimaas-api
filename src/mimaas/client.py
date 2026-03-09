@@ -193,6 +193,7 @@ class MIMaaSClient:
         first_name: str,
         surname: str,
         password: str,
+        invite_token: str,
         plan: str = "free",
         save: bool = True
     ) -> str:
@@ -205,6 +206,7 @@ class MIMaaSClient:
             first_name: User's first name
             surname: User's surname/last name
             password: Account password
+            invite_token: Single-use invite token provided by an admin
             plan: Subscription plan name (default: "free")
             save: Whether to save token to file (default: True)
 
@@ -212,7 +214,7 @@ class MIMaaSClient:
             API token for the new user
 
         Raises:
-            ValidationError: If user already exists or invalid plan
+            ValidationError: If user already exists, invalid plan, or invalid invite token
             NetworkError: If connection fails
 
         Example:
@@ -222,7 +224,8 @@ class MIMaaSClient:
             ...     email="john@example.com",
             ...     first_name="John",
             ...     surname="Doe",
-            ...     password="secure_password"
+            ...     password="secure_password",
+            ...     invite_token="abc123..."
             ... )
             >>> print(f"Registered with token: {token[:16]}...")
         """
@@ -235,6 +238,7 @@ class MIMaaSClient:
                 'first_name': first_name,
                 'surname': surname,
                 'password': password,
+                'invite_token': invite_token,
                 'plan': plan
             }
         )
@@ -312,7 +316,8 @@ class MIMaaSClient:
         self,
         model_path: str,
         board: str,
-        quantize: bool = False
+        quantize: bool = False,
+        build_mode: str = 'pristine'
     ) -> Request:
         """
         Submit model for evaluation.
@@ -321,6 +326,7 @@ class MIMaaSClient:
             model_path: Path to TFLite model file
             board: Board type (e.g., "nrf5340dk")
             quantize: Whether to quantize the model (default: False)
+            build_mode: Build mode, 'pristine' or 'fast' (default: 'pristine')
 
         Returns:
             Request object
@@ -338,7 +344,8 @@ class MIMaaSClient:
             files = {'network': (model_file.name, f, 'application/octet-stream')}
             data = {
                 'board': board,
-                'quantize': str(quantize).lower()
+                'quantize': str(quantize).lower(),
+                'build_mode': build_mode
             }
 
             response = self._make_request(
@@ -348,6 +355,55 @@ class MIMaaSClient:
                 files=files,
                 data=data
             )
+
+        return Request.from_dict(response.json())
+
+    def update_request(
+        self,
+        request_id: int,
+        board: Optional[str] = None,
+        quantize: Optional[bool] = None,
+        model_path: Optional[str] = None
+    ) -> Request:
+        """
+        Update a pending request.
+
+        Args:
+            request_id: Request ID
+            board: New board name (optional)
+            quantize: New quantize setting (optional)
+            model_path: Path to replacement TFLite model file (optional)
+
+        Returns:
+            Updated Request object
+
+        Raises:
+            ResourceNotFoundError: Request not found
+        """
+        data = {}
+        if board is not None:
+            data['board'] = board
+        if quantize is not None:
+            data['quantize'] = str(quantize).lower()
+
+        files = None
+        if model_path is not None:
+            model_file = Path(model_path)
+            if not model_file.exists():
+                raise FileNotFoundError(f"Model file not found: {model_path}")
+            files = {'network': (model_file.name, open(model_file, 'rb'), 'application/octet-stream')}
+
+        try:
+            response = self._make_request(
+                'PATCH',
+                f'/api/requests/{request_id}',
+                require_auth=True,
+                files=files,
+                data=data if data else None
+            )
+        finally:
+            if files:
+                files['network'][1].close()
 
         return Request.from_dict(response.json())
 
@@ -474,6 +530,10 @@ class MIMaaSClient:
     def download_model(self, request_id: int, output_path: str, use_server_folder: bool = False) -> None:
         """Download original TFLite model"""
         self._download_artifact(request_id, 'model', output_path, use_server_folder)
+
+    def download_error_log(self, request_id: int, output_path: str, use_server_folder: bool = False) -> None:
+        """Download error log (error.log) for failed requests"""
+        self._download_artifact(request_id, 'error_log', output_path, use_server_folder)
 
     def download_all_artifacts(self, request_id: int, output_path: str, use_server_folder: bool = False) -> None:
         """Download all artifacts as zip file"""
